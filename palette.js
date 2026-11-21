@@ -6,7 +6,8 @@
 // - Color Hunt の4色パレットを10セット持ち、CSS変数へ適用して
 //   テーマを切り替えます。パレットは他の自作サイトと重複しない
 //   セットを選んでいます。
-// - ページを開くたびにランダムで1つ選びます（保存・復元はしません）。
+// - ランダムに選び直すのは新規アクセスとTOP画面のリロードのときだけです。
+//   アプリ内移動では sessionStorage の選択を引き継ぎます。
 // - 各ページのヘッダーにある #palette-slot へ、ミニバー
 //   （パレット順に 41% / 26% / 18% / 15%）＋名前＋▽ の
 //   カスタムドロップダウンを描画します。
@@ -341,8 +342,9 @@
       button.setAttribute('aria-expanded', 'true');
     }
 
-    // 選択はその訪問中だけ有効（保存・復元はしない）
+    // 選択はその訪問中だけ有効（sessionStorageでアプリ内移動に引き継ぐ）
     function selectPalette(index) {
+      try { sessionStorage.setItem('appPaletteIndex', String(index)); } catch (e) {}
       const palette = PALETTES[index];
       applyPalette(palette);
       [...buttonSwatch.children].forEach((seg, i) => {
@@ -403,8 +405,19 @@
     selectPalette(initialIndex);
   }
 
-  // アクセスごとにランダムで1つ選ぶ（前回の選択は保存・復元しない）
-  const initialIndex = Math.floor(Math.random() * PALETTES.length);
+  // ランダムに選び直すのは新規アクセスとTOP画面のリロードのときだけ。
+  // アプリ内移動では sessionStorage の選択を引き継ぐ。
+  const isTopPage = location.pathname === '/' || /(^|\/)index\.html$/.test(location.pathname);
+  const navEntry = performance.getEntriesByType('navigation')[0];
+  const navType = navEntry ? navEntry.type : 'navigate';
+  const fromSameApp = !!document.referrer && document.referrer.startsWith(location.origin);
+  let savedPalette = null;
+  try { savedPalette = sessionStorage.getItem('appPaletteIndex'); } catch (e) {}
+  if (isTopPage && (navType === 'reload' || !fromSameApp)) savedPalette = null;
+  const savedIndex = savedPalette === null ? NaN : parseInt(savedPalette, 10);
+  const initialIndex = (Number.isInteger(savedIndex) && savedIndex >= 0 && savedIndex < PALETTES.length)
+    ? savedIndex
+    : Math.floor(Math.random() * PALETTES.length);
   // CSS変数の適用は描画前に行い、ドロップダウンの描画はDOM構築後に行う
   applyPalette(PALETTES[initialIndex]);
   if (document.readyState === 'loading') {

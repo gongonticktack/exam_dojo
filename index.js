@@ -629,16 +629,6 @@ const exams = [
     weakness: [{ name: "テストケース設計", rate: "40%" }, { name: "品質指標", rate: "55%" }, { name: "プロセス改善", rate: "50%" }]
   },
   {
-    id: 101,
-    shortName: "GenAI Leader",
-    title: "Google Cloud Generative AI Leader",
-    description: "Google Cloudの生成AI認定。基盤モデル、RAG、Vertex AI、ビジネス活用を問う選択式のCBT試験。",
-    icon: "fa-robot",
-    stats: { questions: 120, accuracy: "-", studyTime: "-", studyDays: "-" },
-    history: [],
-    weakness: []
-  },
-  {
     id: 102,
     shortName: "MCPC IoT 中級",
     title: "MCPC IoTシステム技術検定 中級",
