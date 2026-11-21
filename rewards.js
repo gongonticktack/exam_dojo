@@ -5,10 +5,11 @@
 // qualifications / held_certifications は RLS で管理者しか
 // 読めないため、管理者セッションが無ければ何も表示しません。
 //
-// 表示内容:
+// 表示内容（ページ内タブで切り替え）:
 // - 取得済み資格と報奨金合計
 // - 受験予定の資格（受験料・報奨金・利益）
-// - 未受験の収支比較（取得済み以外の全資格を利益の降順で）
+// - 未受験の収支比較（収支がマイナスの資格は表示しない）
+// 各表はヘッダクリックでソートできる。
 
 let supabaseClient = null;
 
@@ -31,6 +32,143 @@ const escapeHtml = (text) =>
     '"': '&quot;',
     "'": '&#39;',
   }[ch]));
+
+// ---- ソート可能な表の定義 ----
+const TABLE_DEFS = {
+  held: {
+    label: '取得済み',
+    columns: [
+      { key: 'name', label: '資格', type: 'text' },
+      { key: 'obtained_date', label: '取得日', type: 'text' },
+      { key: 'reward_yen', label: '報奨金', type: 'number', align: 'right' },
+    ],
+    sortKey: null, // 初期表示はDBの sort_order 順
+    sortDir: 1,
+    rows: [],
+    footer: null,
+  },
+  planned: {
+    label: '受験予定',
+    columns: [
+      { key: 'name', label: '資格', type: 'text' },
+      { key: 'exam_date', label: '試験日', type: 'text' },
+      { key: 'fee_yen', label: '受験料', type: 'number', align: 'right' },
+      { key: 'reward_yen', label: '報奨金', type: 'number', align: 'right' },
+      { key: 'profit', label: '利益', type: 'number', align: 'right' },
+    ],
+    sortKey: 'exam_date',
+    sortDir: 1,
+    rows: [],
+    footer: null,
+  },
+  nottaken: {
+    label: '未受験',
+    columns: [
+      { key: 'name', label: '資格', type: 'text' },
+      { key: 'fee_yen', label: '受験料', type: 'number', align: 'right' },
+      { key: 'reward_yen', label: '報奨金', type: 'number', align: 'right' },
+      { key: 'profit', label: '収支', type: 'number', align: 'right' },
+    ],
+    sortKey: 'profit',
+    sortDir: -1,
+    rows: [],
+    footer: null,
+  },
+};
+
+let activeTab = 'held';
+
+function sortedRows(def) {
+  const rows = [...def.rows];
+  if (!def.sortKey) return rows;
+  const col = def.columns.find((c) => c.key === def.sortKey);
+  rows.sort((a, b) => {
+    const av = a[def.sortKey];
+    const bv = b[def.sortKey];
+    let cmp;
+    if (col && col.type === 'number') {
+      cmp = (av || 0) - (bv || 0);
+    } else {
+      cmp = String(av ?? '').localeCompare(String(bv ?? ''), 'ja');
+    }
+    return cmp * def.sortDir;
+  });
+  return rows;
+}
+
+function cellHtml(tableKey, col, row) {
+  const value = row[col.key];
+  if (col.type === 'number') {
+    let cls = 'reward-yen';
+    if (col.key === 'profit') {
+      cls += value >= 0 ? ' profit-plus' : ' profit-minus';
+    }
+    return `<td class="${cls}">${yen(value)}</td>`;
+  }
+  return `<td>${escapeHtml(value || '')}</td>`;
+}
+
+function renderTable(tableKey) {
+  const def = TABLE_DEFS[tableKey];
+  const head = def.columns
+    .map((col) => {
+      const align = col.align === 'right' ? ' style="text-align:right"' : '';
+      let arrow = '';
+      if (def.sortKey === col.key) {
+        arrow = def.sortDir === 1 ? ' ▲' : ' ▼';
+      }
+      return `<th class="sortable" data-table="${tableKey}" data-key="${col.key}"${align}>${escapeHtml(col.label)}${arrow}</th>`;
+    })
+    .join('');
+  let body;
+  if (def.rows.length === 0) {
+    body = `<tr><td colspan="${def.columns.length}">表示する資格がありません。</td></tr>`;
+  } else {
+    body = sortedRows(def)
+      .map((row) => `<tr>${def.columns.map((col) => cellHtml(tableKey, col, row)).join('')}</tr>`)
+      .join('');
+  }
+  const foot = def.footer ? `<tfoot>${def.footer}</tfoot>` : '';
+  return `<div class="rewards-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody>${foot}</table></div>`;
+}
+
+function renderRewards() {
+  const bodyEl = document.getElementById('rewards-body');
+  const tabs = Object.keys(TABLE_DEFS)
+    .map((key) => {
+      const def = TABLE_DEFS[key];
+      const cls = key === activeTab ? 'rewards-tab is-active' : 'rewards-tab';
+      return `<button type="button" class="${cls}" data-tab="${key}">${def.label}（${def.rows.length}件）</button>`;
+    })
+    .join('');
+  const panels = Object.keys(TABLE_DEFS)
+    .map((key) => {
+      const hidden = key === activeTab ? '' : ' hidden';
+      return `<div class="rewards-panel-tab" data-panel="${key}"${hidden}>${renderTable(key)}</div>`;
+    })
+    .join('');
+  bodyEl.innerHTML = `<div class="rewards-tabs" role="tablist">${tabs}</div>${panels}`;
+
+  bodyEl.querySelectorAll('.rewards-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab;
+      renderRewards();
+    });
+  });
+  bodyEl.querySelectorAll('th.sortable').forEach((th) => {
+    th.addEventListener('click', () => {
+      const def = TABLE_DEFS[th.dataset.table];
+      const key = th.dataset.key;
+      if (def.sortKey === key) {
+        def.sortDir *= -1;
+      } else {
+        def.sortKey = key;
+        def.sortDir = 1;
+      }
+      renderRewards();
+    });
+  });
+}
 
 async function loadRewards() {
   const summaryEl = document.getElementById('rewards-summary');
@@ -74,41 +212,25 @@ async function loadRewards() {
   const heldTotal = heldRows.reduce((sum, row) => sum + (row.reward_yen || 0), 0);
   summaryEl.textContent = `取得済み ${heldRows.length}件 ／ 報奨金合計 ${yen(heldTotal)}`;
 
-  let html = '';
+  // ---- 取得済み ----
+  TABLE_DEFS.held.rows = heldRows;
+  TABLE_DEFS.held.footer =
+    `<tr><th colspan="2">合計</th><td class="reward-yen"><strong>${yen(heldTotal)}</strong></td></tr>`;
 
-  // ---- 取得済み資格 ----
-  html += '<h3>取得済み資格</h3><div class="rewards-table-wrap"><table><thead><tr><th>資格</th><th>取得日</th><th style="text-align:right">報奨金</th></tr></thead><tbody>';
-  for (const row of heldRows) {
-    html += `<tr><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.obtained_date || '')}</td><td class="reward-yen">${yen(row.reward_yen)}</td></tr>`;
-  }
-  html += `</tbody><tfoot><tr><th colspan="2">合計</th><td class="reward-yen"><strong>${yen(heldTotal)}</strong></td></tr></tfoot></table></div>`;
+  // ---- 受験予定 ----
+  const planned = qualRows
+    .filter((row) => row.is_planned)
+    .map((row) => ({ ...row, profit: (row.reward_yen || 0) - (row.fee_yen || 0) }));
+  TABLE_DEFS.planned.rows = planned;
 
-  // ---- 受験予定の資格 ----
-  const planned = qualRows.filter((row) => row.is_planned);
-  if (planned.length > 0) {
-    html += '<h3>受験予定の資格</h3><div class="rewards-table-wrap"><table><thead><tr><th>資格</th><th>試験日</th><th style="text-align:right">受験料</th><th style="text-align:right">報奨金</th><th style="text-align:right">利益</th></tr></thead><tbody>';
-    for (const row of planned) {
-      const profit = (row.reward_yen || 0) - (row.fee_yen || 0);
-      html += `<tr><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.exam_date || '')}</td><td class="reward-yen">${yen(row.fee_yen)}</td><td class="reward-yen">${yen(row.reward_yen)}</td><td class="reward-yen">${yen(profit)}</td></tr>`;
-    }
-    html += '</tbody></table></div>';
-  }
-
-  // ---- 未受験の収支比較 ----
+  // ---- 未受験（取得済み・受験予定を除き、収支マイナスは表示しない） ----
   const heldNames = new Set(heldRows.map((row) => row.name));
-  const notTaken = qualRows
-    .filter((row) => !heldNames.has(row.name))
+  TABLE_DEFS.nottaken.rows = qualRows
+    .filter((row) => !heldNames.has(row.name) && !row.is_planned)
     .map((row) => ({ ...row, profit: (row.reward_yen || 0) - (row.fee_yen || 0) }))
-    .sort((a, b) => b.profit - a.profit);
+    .filter((row) => row.profit >= 0);
 
-  html += `<h3>未受験の収支比較（${notTaken.length}件・利益順）</h3><div class="rewards-table-wrap"><table><thead><tr><th>資格</th><th style="text-align:right">受験料</th><th style="text-align:right">報奨金</th><th style="text-align:right">収支</th></tr></thead><tbody>`;
-  for (const row of notTaken) {
-    const cls = row.profit >= 0 ? 'profit-plus' : 'profit-minus';
-    html += `<tr><td>${escapeHtml(row.name)}</td><td class="reward-yen">${yen(row.fee_yen)}</td><td class="reward-yen">${yen(row.reward_yen)}</td><td class="reward-yen ${cls}">${yen(row.profit)}</td></tr>`;
-  }
-  html += '</tbody></table></div>';
-
-  bodyEl.innerHTML = html;
+  renderRewards();
 }
 
 loadRewards();

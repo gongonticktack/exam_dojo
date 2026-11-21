@@ -140,3 +140,44 @@ body {
     border-radius: 20px;
   }
 }
+
+/* ページ内タブ */
+.rewards-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.rewards-tab {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 8px 16px;
+}
+
+.rewards-tab.is-active {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.rewards-panel-tab[hidden] {
+  display: none;
+}
+
+/* ソート可能なヘッダ */
+.rewards-body th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.rewards-body th.sortable:hover {
+  color: var(--text);
+}
