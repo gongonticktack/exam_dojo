@@ -2,6 +2,7 @@
   --surface: rgba(18, 24, 60, 0.94);
   --border: rgba(255, 255, 255, 0.12);
   --accent: #8b7dff;
+  --accent-2: #9a8fff;
   --text: #eef2ff;
   --text-muted: #aab3d1;
   --success: #5eead4;
@@ -16,7 +17,7 @@
 
 body {
   min-height: 100vh;
-  background: radial-gradient(circle at top left, rgba(139, 125, 255, 0.18), transparent 30%), linear-gradient(135deg, #04050c 0%, #0b1121 45%, #090912 100%);
+  background: radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 18%, transparent), transparent 30%), linear-gradient(135deg, #04050c 0%, #0b1121 45%, #090912 100%);
   color: var(--text);
   font-family: "Noto Sans JP", sans-serif;
 }
