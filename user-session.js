@@ -260,6 +260,8 @@ function openLoginPopup(client) {
       adminError.textContent = 'ログインに失敗しました';
       return;
     }
+    // 管理者ログインはユーザー「gtakkun」と紐付けます。
+    setCurrentUserName('gtakkun');
     location.reload();
   };
   adminLoginBtn.addEventListener('click', doAdminLogin);
@@ -329,6 +331,10 @@ async function renderUserBar(client) {
 
   // ---- 管理者としてログイン中 ----
   if (adminSession) {
+    // 管理者はユーザー「gtakkun」として扱います。
+    if (getCurrentUserName() !== 'gtakkun') {
+      setCurrentUserName('gtakkun');
+    }
     const label = document.createElement('span');
     label.className = 'user-bar-label';
     label.innerHTML = '<i class="fa-solid fa-user-shield"></i> 管理者ログイン中';

@@ -1422,62 +1422,17 @@ editButton.addEventListener("click", () => {
 
 
 /**
- * 報奨金パネル（管理者ログイン時のみ）を読み込んで表示します。
- * qualifications / held_certifications は RLS で管理者しか読めないため、
- * 管理者セッションが無ければパネルは非表示のままです。
+ * 報奨金ページへのリンクを、管理者ログイン時のみ表示します。
+ * 報奨金データ自体は別ページ（rewards.html）で表示します。
  */
 async function loadAdminRewards() {
-  const section = document.getElementById('admin-rewards');
-  if (!section || !supabaseClient || typeof getAdminSession !== 'function') {
+  const link = document.getElementById('rewards-link');
+  if (!link || !supabaseClient || typeof getAdminSession !== 'function') {
     return;
   }
 
   const session = await getAdminSession(supabaseClient);
-  if (!session) {
-    section.hidden = true;
-    return;
-  }
-
-  const summaryEl = document.getElementById('admin-rewards-summary');
-  const bodyEl = document.getElementById('admin-rewards-body');
-
-  const [{ data: held, error: heldError }, { data: quals, error: qualsError }] = await Promise.all([
-    supabaseClient.from('held_certifications').select('*').order('sort_order', { ascending: true }),
-    supabaseClient.from('qualifications').select('*').eq('is_planned', true).order('sort_order', { ascending: true })
-  ]);
-
-  if (heldError || qualsError) {
-    console.error('報奨金データ取得エラー:', heldError || qualsError);
-    section.hidden = true;
-    return;
-  }
-
-  section.hidden = false;
-
-  const yen = (value) => `¥${(value || 0).toLocaleString('ja-JP')}`;
-  const heldTotal = (held || []).reduce((sum, row) => sum + (row.reward_yen || 0), 0);
-  summaryEl.textContent = `取得済み ${(held || []).length}件 ／ 報奨金合計 ${yen(heldTotal)}`;
-
-  const escapeHtml = (text) => String(text ?? '').replace(/[&<>"']/g, (ch) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[ch]));
-
-  let html = '<h3>取得済み資格</h3><table><thead><tr><th>資格</th><th>取得日</th><th style="text-align:right">報奨金</th></tr></thead><tbody>';
-  for (const row of held || []) {
-    html += `<tr><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.obtained_date || '')}</td><td class="reward-yen">${yen(row.reward_yen)}</td></tr>`;
-  }
-  html += `</tbody><tfoot><tr><th colspan="2">合計</th><td class="reward-yen"><strong>${yen(heldTotal)}</strong></td></tr></tfoot></table>`;
-
-  if (quals && quals.length > 0) {
-    html += '<h3>受験予定の資格</h3><table><thead><tr><th>資格</th><th>試験日</th><th style="text-align:right">受験料</th><th style="text-align:right">報奨金</th><th style="text-align:right">利益</th></tr></thead><tbody>';
-    for (const row of quals) {
-      const profit = (row.reward_yen || 0) - (row.fee_yen || 0);
-      html += `<tr><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.exam_date || '')}</td><td class="reward-yen">${yen(row.fee_yen)}</td><td class="reward-yen">${yen(row.reward_yen)}</td><td class="reward-yen">${yen(profit)}</td></tr>`;
-    }
-    html += '</tbody></table>';
-  }
-
-  bodyEl.innerHTML = html;
+  link.hidden = !session;
 }
 
 // 🎯 ページロード時の初期処理
