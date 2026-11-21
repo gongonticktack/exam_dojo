@@ -1073,3 +1073,136 @@ body {
 .rewards-link:hover {
   border-color: var(--accent);
 }
+
+/* ====================================== */
+/* 報奨金ビュー（トップ内の画面切り替え） */
+/* ====================================== */
+
+.rewards-view {
+  --success: #5eead4;
+  --danger: #fb7185;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 28px;
+  margin-top: 24px;
+}
+
+.rewards-view[hidden] {
+  display: none;
+}
+
+.rewards-view-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.rewards-view-heading h1 {
+  font-size: 1.8rem;
+}
+
+.rewards-view .rewards-summary {
+  color: var(--text-muted);
+}
+
+.rewards-back-btn {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 8px;
+  padding: 12px 16px;
+}
+
+.rewards-back-btn:hover {
+  border-color: var(--accent);
+}
+
+.rewards-view .rewards-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.rewards-view .rewards-body th,
+.rewards-view .rewards-body td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.rewards-view .rewards-body th {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.rewards-view .rewards-body td.reward-yen {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rewards-view .rewards-body .profit-plus {
+  color: var(--success);
+}
+
+.rewards-view .rewards-body .profit-minus {
+  color: var(--danger);
+}
+
+.rewards-view .rewards-table-wrap {
+  overflow-x: auto;
+}
+
+.rewards-view .rewards-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.rewards-view .rewards-tab {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 8px 16px;
+}
+
+.rewards-view .rewards-tab.is-active {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.rewards-view .rewards-panel-tab[hidden] {
+  display: none;
+}
+
+.rewards-view .rewards-body th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.rewards-view .rewards-body th.sortable:hover {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .rewards-view {
+    padding: 18px;
+    border-radius: 20px;
+  }
+}

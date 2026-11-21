@@ -1422,8 +1422,9 @@ editButton.addEventListener("click", () => {
 
 
 /**
- * 報奨金ページへのリンクを、管理者ログイン時のみ表示します。
- * 報奨金データ自体は別ページ（rewards.html）で表示します。
+ * 報奨金リンクを、管理者ログイン時のみ表示します。
+ * クリック時は別ページへ移動せず、画面内で報奨金ビューへ
+ * 切り替えます（SPA形式）。
  */
 async function loadAdminRewards() {
   const link = document.getElementById('rewards-link');
@@ -1433,6 +1434,59 @@ async function loadAdminRewards() {
 
   const session = await getAdminSession(supabaseClient);
   link.hidden = !session;
+
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    showRewardsView();
+  });
+  const backBtn = document.getElementById('rewards-back');
+  if (backBtn) {
+    backBtn.addEventListener('click', hideRewardsView);
+  }
+}
+
+/** メインの各セクションの表示状態を覚えて切り替えます。 */
+let mainSectionStates = null;
+
+function setMainSectionsHidden(hidden) {
+  const sections = document.querySelectorAll(
+    '.main-content > .hero-card, .main-content > .stats, ' +
+    '.main-content > .bottom-grid, .main-content > .debug-log-card, ' +
+    '.main-content > #rewards-link'
+  );
+  if (hidden) {
+    mainSectionStates = Array.from(sections, (el) => el.hidden);
+    sections.forEach((el) => { el.hidden = true; });
+  } else {
+    sections.forEach((el, i) => {
+      el.hidden = mainSectionStates ? mainSectionStates[i] : false;
+    });
+    mainSectionStates = null;
+  }
+}
+
+/** 報奨金ビューを画面内に表示します。 */
+function showRewardsView() {
+  const view = document.getElementById('rewards-view');
+  if (!view) {
+    return;
+  }
+  setMainSectionsHidden(true);
+  view.hidden = false;
+  if (typeof window.loadRewardsView === 'function') {
+    window.loadRewardsView(supabaseClient);
+  }
+  window.scrollTo({ top: 0 });
+}
+
+/** 報奨金ビューを閉じてトップ表示に戻します。 */
+function hideRewardsView() {
+  const view = document.getElementById('rewards-view');
+  if (!view) {
+    return;
+  }
+  view.hidden = true;
+  setMainSectionsHidden(false);
 }
 
 // 🎯 ページロード時の初期処理

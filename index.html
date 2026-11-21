@@ -394,6 +394,24 @@
 
     </section>
 
+    <!-- 報奨金ビュー（画面内で切り替え表示） -->
+    <section id="rewards-view" class="rewards-view" hidden>
+
+      <div class="rewards-view-heading">
+        <h1>報奨金</h1>
+        <span id="rewards-summary" class="rewards-summary">読み込み中</span>
+        <button type="button" id="rewards-back" class="rewards-back-btn">
+          <i class="fa-solid fa-arrow-left"></i>
+          トップへ戻る
+        </button>
+      </div>
+
+      <div id="rewards-body" class="rewards-body">
+        <p>読み込んでいます。</p>
+      </div>
+
+    </section>
+
     </main>
 
   </div>
@@ -418,6 +436,11 @@
         sessionScript.onload = () => {
           const script = document.createElement('script');
           script.src = 'index.js';
+          script.onload = () => {
+            const rewardsScript = document.createElement('script');
+            rewardsScript.src = 'rewards.js';
+            document.body.appendChild(rewardsScript);
+          };
           document.body.appendChild(script);
         };
         document.body.appendChild(sessionScript);

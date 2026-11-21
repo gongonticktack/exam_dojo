@@ -170,11 +170,16 @@ function renderRewards() {
   });
 }
 
-async function loadRewards() {
+async function loadRewards(providedClient) {
   const summaryEl = document.getElementById('rewards-summary');
   const bodyEl = document.getElementById('rewards-body');
+  if (!summaryEl || !bodyEl) {
+    return;
+  }
 
-  if (!initSupabase()) {
+  if (providedClient) {
+    supabaseClient = providedClient;
+  } else if (!initSupabase()) {
     summaryEl.textContent = '';
     bodyEl.innerHTML = '<p>Supabase設定が不足しています。</p>';
     return;
@@ -234,4 +239,9 @@ async function loadRewards() {
   renderRewards();
 }
 
-loadRewards();
+// トップページからは loadRewardsView(client) で画面内ビューとして
+// 呼び出します。単独ページ（rewards.html）でのみ自動実行します。
+window.loadRewardsView = loadRewards;
+if (window.__REWARDS_STANDALONE__) {
+  loadRewards();
+}

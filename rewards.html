@@ -54,6 +54,7 @@
       })
       .then(config => {
         window.SUPABASE_CONFIG = config.supabase;
+        window.__REWARDS_STANDALONE__ = true;
         const script = document.createElement('script');
         script.src = 'rewards.js';
         document.body.appendChild(script);
