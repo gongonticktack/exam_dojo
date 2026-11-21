@@ -8,7 +8,7 @@
 // 表示内容（ページ内タブで切り替え）:
 // - 取得済み資格と報奨金合計
 // - 受験予定の資格（受験料・報奨金・利益）
-// - 未受験の収支比較（収支がマイナスの資格は表示しない）
+// - 未受験の収支比較（収支マイナスと受験料不明の資格は表示しない）
 // 各表はヘッダクリックでソートできる。
 
 let supabaseClient = null;
@@ -223,10 +223,11 @@ async function loadRewards() {
     .map((row) => ({ ...row, profit: (row.reward_yen || 0) - (row.fee_yen || 0) }));
   TABLE_DEFS.planned.rows = planned;
 
-  // ---- 未受験（取得済み・受験予定を除き、収支マイナスは表示しない） ----
+  // ---- 未受験（取得済み・受験予定を除く。収支マイナスと受験料不明は表示しない） ----
   const heldNames = new Set(heldRows.map((row) => row.name));
   TABLE_DEFS.nottaken.rows = qualRows
     .filter((row) => !heldNames.has(row.name) && !row.is_planned)
+    .filter((row) => row.fee_yen != null)
     .map((row) => ({ ...row, profit: (row.reward_yen || 0) - (row.fee_yen || 0) }))
     .filter((row) => row.profit >= 0);
 
