@@ -67,22 +67,18 @@ function initSupabase() {
 initSupabase();
 
 /**
- * 移行した資格（exam_id 100以上）では、ログイン中のユーザーの
- * 進捗だけを表示するため、履歴クエリに user_name の絞り込みを付けます。
- * 従来の資格（サンプルデータ）は user_name が無いので対象外です。
+ * 履歴クエリに user_name の絞り込みを付けます。
+ * ログイン中は全資格で自分の履歴だけを表示し、
+ * 未ログインの場合は履歴を表示しません（アクセスごとに初期化）。
  *
  * @param {object} query - Supabaseのクエリビルダー。
  * @param {number} examId - 資格ID。
  * @returns {object} 処理結果。
  */
 function applyUserFilter(query, examId) {
-  if (examId >= 100 && typeof getCurrentUserName === 'function') {
-    const userName = getCurrentUserName();
-    if (userName) {
-      return query.eq('user_name', userName);
-    }
-  }
-  return query;
+  const userName =
+    typeof getCurrentUserName === 'function' ? getCurrentUserName() : '';
+  return query.eq('user_name', userName || '');
 }
 
 // ======================================

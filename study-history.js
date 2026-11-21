@@ -288,11 +288,9 @@ async function loadHistory() {
     .select("*")
     .eq("exam_id", examId);
 
-  // 移行した資格（exam_id 100以上）では、ログイン中のユーザーの履歴だけを表示します。
+  // ログイン中のユーザーの履歴だけを表示します（未ログインでは表示しません）。
   const currentUserName = localStorage.getItem("qualistudyUserName") || "";
-  if (examId >= 100 && currentUserName) {
-    historyQuery = historyQuery.eq("user_name", currentUserName);
-  }
+  historyQuery = historyQuery.eq("user_name", currentUserName);
 
   const { data, error } = await historyQuery
     .order("answered_at", { ascending: false })

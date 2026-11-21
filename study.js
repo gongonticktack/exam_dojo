@@ -601,7 +601,8 @@ async function filterQuestionsForStudyMode(questionsData) {
   const { data: historyData, error } = await supabaseClient
     .from("exam_histories")
     .select("*")
-    .eq("exam_id", currentExamId);
+    .eq("exam_id", currentExamId)
+    .eq("user_name", localStorage.getItem("qualistudyUserName") || "");
 
   if (error) {
     throw error;
@@ -1061,6 +1062,12 @@ async function saveExamHistory(isCorrect, questionIndex, selectedChoices) {
     return;
   }
 
+  // 未ログイン時は履歴を保存しません（アクセスごとに初期化されます）。
+  const currentUserName = localStorage.getItem('qualistudyUserName') || '';
+  if (!currentUserName) {
+    return;
+  }
+
   const question = questions[questionIndex];
   const questionId = question ? question.id : null;
   const activity = question ? question.question : `問題 ${questionIndex + 1}`;
@@ -1077,7 +1084,7 @@ async function saveExamHistory(isCorrect, questionIndex, selectedChoices) {
 
   // ログイン中のユーザー名で進捗を管理します（名前のみログイン）。
   if (await hasExamHistoryColumn('user_name')) {
-    row.user_name = localStorage.getItem('qualistudyUserName') || null;
+    row.user_name = currentUserName;
   }
 
   if (currentStudySessionStartedAt && await hasExamHistoryColumn('exam_started_at')) {
