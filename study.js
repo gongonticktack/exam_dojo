@@ -318,7 +318,10 @@ async function initPage() {
     { id: 3, shortName: "HTML5 L1", name: "HTML5 Professional Level1" },
     { id: 4, shortName: "アジャイル", name: "アジャイル開発技術者試験" },
     { id: 5, shortName: "AWS SAA", name: "AWS Certified Solutions Architect - Associate" },
-    { id: 6, shortName: "JCSQE 初級", name: "JCSQE 初級" }
+    { id: 6, shortName: "JCSQE 初級", name: "JCSQE 初級" },
+    { id: 101, shortName: "GenAI Leader", name: "Google Cloud Generative AI Leader" },
+    { id: 102, shortName: "MCPC IoT 中級", name: "MCPC IoTシステム技術検定 中級" },
+    { id: 103, shortName: "OCI Architect", name: "Oracle Cloud Infrastructure Architect Associate" }
   ];
 
   let selectedExamName = selectedExamFromQuery || storedExamName;
@@ -1070,6 +1073,11 @@ async function saveExamHistory(isCorrect, questionIndex, selectedChoices) {
 
   if (questionId && await hasExamHistoryColumn('question_id')) {
     row.question_id = questionId;
+  }
+
+  // ログイン中のユーザー名で進捗を管理します（名前のみログイン）。
+  if (await hasExamHistoryColumn('user_name')) {
+    row.user_name = localStorage.getItem('qualistudyUserName') || null;
   }
 
   if (currentStudySessionStartedAt && await hasExamHistoryColumn('exam_started_at')) {

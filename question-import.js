@@ -206,6 +206,72 @@ const exams = [
 
     }
 
+  },
+
+  {
+
+    id: 101,
+
+    shortName: "GenAI Leader",
+
+    title: "Google Cloud Generative AI Leader",
+
+    description:
+      "Google Cloudの生成AI認定。基盤モデル、RAG、Vertex AI、ビジネス活用を問う選択式のCBT試験。",
+
+    stats: {
+
+      questions: 120,
+      accuracy: "-",
+      studyTime: "-",
+      studyDays: "-"
+
+    }
+
+  },
+
+  {
+
+    id: 102,
+
+    shortName: "MCPC IoT 中級",
+
+    title: "MCPC IoTシステム技術検定 中級",
+
+    description:
+      "MCPCの検定。IoTやモバイルシステムの知識・技術を問うCBT試験。",
+
+    stats: {
+
+      questions: 20,
+      accuracy: "-",
+      studyTime: "-",
+      studyDays: "-"
+
+    }
+
+  },
+
+  {
+
+    id: 103,
+
+    shortName: "OCI Architect",
+
+    title: "Oracle Cloud Infrastructure Architect Associate",
+
+    description:
+      "OCIの設計・運用を問う認定（1Z0-1072）。ケーススタディ中心の出題。",
+
+    stats: {
+
+      questions: 70,
+      accuracy: "-",
+      studyTime: "-",
+      studyDays: "-"
+
+    }
+
   }
 
 ];

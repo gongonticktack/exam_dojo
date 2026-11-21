@@ -66,6 +66,25 @@ function initSupabase() {
 // Supabase初期化
 initSupabase();
 
+/**
+ * 移行した資格（exam_id 100以上）では、ログイン中のユーザーの
+ * 進捗だけを表示するため、履歴クエリに user_name の絞り込みを付けます。
+ * 従来の資格（サンプルデータ）は user_name が無いので対象外です。
+ *
+ * @param {object} query - Supabaseのクエリビルダー。
+ * @param {number} examId - 資格ID。
+ * @returns {object} 処理結果。
+ */
+function applyUserFilter(query, examId) {
+  if (examId >= 100 && typeof getCurrentUserName === 'function') {
+    const userName = getCurrentUserName();
+    if (userName) {
+      return query.eq('user_name', userName);
+    }
+  }
+  return query;
+}
+
 // ======================================
 // 問題数をDBから取得
 // ======================================
@@ -114,10 +133,13 @@ async function fetchExamHistory(examId, limit = 3) {
   }
 
   try {
-    const { data, error } = await supabaseClient
+    let historyQuery = supabaseClient
       .from('exam_histories')
       .select('*')
-      .eq('exam_id', examId)
+      .eq('exam_id', examId);
+    historyQuery = applyUserFilter(historyQuery, examId);
+
+    const { data, error } = await historyQuery
       .order('answered_at', { ascending: false })
       .limit(limit);
 
@@ -151,18 +173,22 @@ async function fetchExamSummary(examId) {
     let error;
     let useLegacy = false;
 
-    ({ data, error } = await supabaseClient
+    let summaryQuery = supabaseClient
       .from('exam_histories')
       .select('is_correct,answered_at,exam_started_at')
-      .eq('exam_id', examId));
+      .eq('exam_id', examId);
+    summaryQuery = applyUserFilter(summaryQuery, examId);
+    ({ data, error } = await summaryQuery);
 
     if (error) {
       console.warn('学習サマリー取得でis_correct列が見つかりません。legacy schemaを試行します:', error.message || error);
       useLegacy = true;
-      ({ data, error } = await supabaseClient
+      let legacyQuery = supabaseClient
         .from('exam_histories')
         .select('correct_count,total_count,answered_at,exam_started_at')
-        .eq('exam_id', examId));
+        .eq('exam_id', examId);
+      legacyQuery = applyUserFilter(legacyQuery, examId);
+      ({ data, error } = await legacyQuery);
     }
 
     if (error) {
@@ -396,10 +422,13 @@ async function fetchExamWeaknesses(examId) {
       correctRate: Number.POSITIVE_INFINITY
     }));
 
-    const { data, error } = await supabaseClient
+    let weaknessQuery = supabaseClient
       .from('exam_histories')
       .select('*')
-      .eq('exam_id', examId)
+      .eq('exam_id', examId);
+    weaknessQuery = applyUserFilter(weaknessQuery, examId);
+
+    const { data, error } = await weaknessQuery
       .order('answered_at', { ascending: false });
 
     if (error) {
@@ -568,6 +597,36 @@ const exams = [
     stats: { questions: 210, accuracy: "80%", studyTime: "12時間", studyDays: "8日" },
     history: ["テスト設計基礎", "品質管理プロセス", "レビュー手法"],
     weakness: [{ name: "テストケース設計", rate: "40%" }, { name: "品質指標", rate: "55%" }, { name: "プロセス改善", rate: "50%" }]
+  },
+  {
+    id: 101,
+    shortName: "GenAI Leader",
+    title: "Google Cloud Generative AI Leader",
+    description: "Google Cloudの生成AI認定。基盤モデル、RAG、Vertex AI、ビジネス活用を問う選択式のCBT試験。",
+    icon: "fa-robot",
+    stats: { questions: 120, accuracy: "-", studyTime: "-", studyDays: "-" },
+    history: [],
+    weakness: []
+  },
+  {
+    id: 102,
+    shortName: "MCPC IoT 中級",
+    title: "MCPC IoTシステム技術検定 中級",
+    description: "MCPCの検定。IoTやモバイルシステムの知識・技術を問うCBT試験。",
+    icon: "fa-tower-broadcast",
+    stats: { questions: 20, accuracy: "-", studyTime: "-", studyDays: "-" },
+    history: [],
+    weakness: []
+  },
+  {
+    id: 103,
+    shortName: "OCI Architect",
+    title: "Oracle Cloud Infrastructure Architect Associate",
+    description: "OCIの設計・運用を問う認定（1Z0-1072）。ネットワーク、IAM、コンピュート、セキュリティのケーススタディ中心。",
+    icon: "fa-cloud",
+    stats: { questions: 70, accuracy: "-", studyTime: "-", studyDays: "-" },
+    history: [],
+    weakness: []
   }
 ];
 
@@ -1334,11 +1393,75 @@ editButton.addEventListener("click", () => {
 });
 
 
+/**
+ * 報奨金パネル（管理者ログイン時のみ）を読み込んで表示します。
+ * qualifications / held_certifications は RLS で管理者しか読めないため、
+ * 管理者セッションが無ければパネルは非表示のままです。
+ */
+async function loadAdminRewards() {
+  const section = document.getElementById('admin-rewards');
+  if (!section || !supabaseClient || typeof getAdminSession !== 'function') {
+    return;
+  }
+
+  const session = await getAdminSession(supabaseClient);
+  if (!session) {
+    section.hidden = true;
+    return;
+  }
+
+  const summaryEl = document.getElementById('admin-rewards-summary');
+  const bodyEl = document.getElementById('admin-rewards-body');
+
+  const [{ data: held, error: heldError }, { data: quals, error: qualsError }] = await Promise.all([
+    supabaseClient.from('held_certifications').select('*').order('sort_order', { ascending: true }),
+    supabaseClient.from('qualifications').select('*').eq('is_planned', true).order('sort_order', { ascending: true })
+  ]);
+
+  if (heldError || qualsError) {
+    console.error('報奨金データ取得エラー:', heldError || qualsError);
+    section.hidden = true;
+    return;
+  }
+
+  section.hidden = false;
+
+  const yen = (value) => `¥${(value || 0).toLocaleString('ja-JP')}`;
+  const heldTotal = (held || []).reduce((sum, row) => sum + (row.reward_yen || 0), 0);
+  summaryEl.textContent = `取得済み ${(held || []).length}件 ／ 報奨金合計 ${yen(heldTotal)}`;
+
+  const escapeHtml = (text) => String(text ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+
+  let html = '<h3>取得済み資格</h3><table><thead><tr><th>資格</th><th>取得日</th><th style="text-align:right">報奨金</th></tr></thead><tbody>';
+  for (const row of held || []) {
+    html += `<tr><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.obtained_date || '')}</td><td class="reward-yen">${yen(row.reward_yen)}</td></tr>`;
+  }
+  html += `</tbody><tfoot><tr><th colspan="2">合計</th><td class="reward-yen"><strong>${yen(heldTotal)}</strong></td></tr></tfoot></table>`;
+
+  if (quals && quals.length > 0) {
+    html += '<h3>受験予定の資格</h3><table><thead><tr><th>資格</th><th>試験日</th><th style="text-align:right">受験料</th><th style="text-align:right">報奨金</th><th style="text-align:right">利益</th></tr></thead><tbody>';
+    for (const row of quals) {
+      const profit = (row.reward_yen || 0) - (row.fee_yen || 0);
+      html += `<tr><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.exam_date || '')}</td><td class="reward-yen">${yen(row.fee_yen)}</td><td class="reward-yen">${yen(row.reward_yen)}</td><td class="reward-yen">${yen(profit)}</td></tr>`;
+    }
+    html += '</tbody></table>';
+  }
+
+  bodyEl.innerHTML = html;
+}
+
 // 🎯 ページロード時の初期処理
 // ======================================
 
 // 最初に表示する試験（HTML5 L1：id=0）
 (async () => {
+  if (typeof renderUserBar === 'function') {
+    await renderUserBar(supabaseClient);
+  }
+  loadAdminRewards();
+
   renderExamCards();
 
   const initialExamIndex = getSavedExamIndex();

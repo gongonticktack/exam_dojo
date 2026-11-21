@@ -133,13 +133,7 @@
 
       </button>
 
-      <button class="login-btn">
-
-        <i class="fa-regular fa-user"></i>
-
-        ログイン（後で実装）
-
-      </button>
+      <div id="user-bar" class="user-bar"></div>
 
     </header>
 
@@ -262,6 +256,25 @@
           <h2 id="stat-study-days">12日</h2>
         </div>
 
+      </div>
+
+    </section>
+
+    <!-- 報奨金（管理者ログイン時のみ表示） -->
+    <section id="admin-rewards" class="admin-rewards" hidden>
+
+      <div class="section-heading">
+
+        <h2>
+          報奨金（管理者）
+        </h2>
+
+        <span id="admin-rewards-summary">読み込み中</span>
+
+      </div>
+
+      <div id="admin-rewards-body" class="admin-rewards-body">
+        <p>読み込んでいます。</p>
       </div>
 
     </section>
@@ -412,10 +425,15 @@
       })
       .then(config => {
         window.SUPABASE_CONFIG = config.supabase;
-        // 設定完了後に index.js を読み込む
-        const script = document.createElement('script');
-        script.src = 'index.js';
-        document.body.appendChild(script);
+        // 設定完了後に user-session.js と index.js を読み込む
+        const sessionScript = document.createElement('script');
+        sessionScript.src = 'user-session.js';
+        sessionScript.onload = () => {
+          const script = document.createElement('script');
+          script.src = 'index.js';
+          document.body.appendChild(script);
+        };
+        document.body.appendChild(sessionScript);
       })
       .catch(error => {
         console.error('Supabase設定エラー:', error);

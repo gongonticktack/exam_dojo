@@ -407,7 +407,10 @@ async function initPage() {
     { id: 3, shortName: "HTML5 L1" },
     { id: 4, shortName: "アジャイル" },
     { id: 5, shortName: "AWS SAA" },
-    { id: 6, shortName: "JCSQE 初級" }
+    { id: 6, shortName: "JCSQE 初級" },
+    { id: 101, shortName: "GenAI Leader" },
+    { id: 102, shortName: "MCPC IoT 中級" },
+    { id: 103, shortName: "OCI Architect" }
   ];
 
   // 資格名から資格IDを取得
