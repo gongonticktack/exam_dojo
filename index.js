@@ -706,6 +706,9 @@ function createCustomExam(name) {
 
 exams.push(...loadCustomExams());
 
+// 資格一覧は shortName のアルファベット順に並べる
+exams.sort((a, b) => a.shortName.localeCompare(b.shortName, "ja"));
+
 // ======================================
 // HTML取得
 // ======================================
@@ -1239,16 +1242,6 @@ if (topStartIncorrectButton) {
 
 if (topStartRecentIncorrectButton) {
   topStartRecentIncorrectButton.addEventListener("click", () => startTopPractice("recent-incorrect"));
-}
-
-const scheduleButton =
-  document.querySelector(".top-schedule-btn");
-
-if (scheduleButton) {
-  scheduleButton.addEventListener("click", () => {
-    window.location.href =
-      "/schedule";
-  });
 }
 
 // ======================================

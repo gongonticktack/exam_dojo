@@ -135,8 +135,7 @@ body {
   gap: 16px;
 }
 .history-header .palette-slot,
-.single-editor-header .palette-slot,
-.schedule-header .palette-slot {
+.single-editor-header .palette-slot {
   margin-left: auto;
 }
 .sidebar .palette-slot {
@@ -154,4 +153,16 @@ body {
 @media (max-width: 640px) {
   .palette-swatch { width: 72px; }
   .palette-menu { min-width: 232px; }
+  .topbar .palette-slot {
+    flex: 1 1 150px;
+    min-width: 0;
+  }
+  .topbar .palette-dropdown,
+  .topbar .palette-button {
+    width: 100%;
+  }
+  .topbar .palette-button-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

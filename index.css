@@ -191,33 +191,6 @@ body {
   transform: translateY(-1px);
 }
 
-.top-schedule-btn {
-  align-items: center;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: var(--text);
-  cursor: pointer;
-  display: inline-flex;
-  font: inherit;
-  font-size: 0.78rem;
-  gap: 5px;
-  min-height: 32px;
-  padding: 6px 9px;
-  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
-  white-space: nowrap;
-}
-
-.top-schedule-btn:hover {
-  background: rgba(139, 125, 255, 0.14);
-  border-color: rgba(139, 125, 255, 0.38);
-  transform: translateY(-1px);
-}
-
-.hero-buttons .schedule-btn {
-  display: none;
-}
-
 .hero-card {
   display: flex;
   justify-content: space-between;
@@ -287,8 +260,7 @@ body {
   box-shadow: 0 20px 42px rgba(107, 93, 255, 0.42);
 }
 
-.import-btn,
-.schedule-btn {
+.import-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text);
@@ -299,16 +271,9 @@ body {
   transition: all 0.3s ease;
 }
 
-.import-btn:hover,
-.schedule-btn:hover {
+.import-btn:hover {
   background: rgba(139, 125, 255, 0.14);
   border-color: rgba(139, 125, 255, 0.4);
-}
-
-.schedule-btn {
-  align-items: center;
-  display: flex;
-  gap: 8px;
 }
 
 .edit-btn {
@@ -838,6 +803,19 @@ body {
 @media (max-width: 640px) {
   body {
     padding: 8px;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .user-bar {
+    flex: none;
+  }
+
+  .user-bar-btn {
+    white-space: nowrap;
   }
 
   .sidebar {
