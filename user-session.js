@@ -6,8 +6,10 @@
 //
 // - 一般ユーザーは名前だけでログインし、その名前で学習の進捗
 //   （exam_histories の user_name）を管理します。
-// - 管理者は同じログイン画面からメールアドレス＋パスワードで
-//   ログインします。管理者だけが報奨金データ（qualifications /
+// - ログインはトップバーの「ログイン」ボタンから開くポップアップ
+//   で行います。管理者ログインはポップアップ内では折りたたまれて
+//   いて、開くとメールアドレス＋パスワードの入力欄が出ます。
+// - 管理者だけが報奨金データ（qualifications /
 //   held_certifications）を読み取れます（RLSで anon には非公開）。
 
 const QUALISTUDY_USER_KEY = 'qualistudyUserName';
@@ -42,9 +44,161 @@ async function getAdminSession(client) {
 }
 
 /**
- * トップバーの #user-bar にログインUIを描画します。
- * 管理者のログイン状態が変わったらページを再読み込みして、
- * 報奨金パネルの表示などを初期化し直します。
+ * ログインポップアップ（モーダル）を開きます。
+ * 管理者ログイン欄は折りたたまれた状態で表示されます。
+ *
+ * @param {object} client - Supabaseクライアント（null可）
+ */
+function openLoginPopup(client) {
+  closeLoginPopup();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'login-popup-overlay';
+  overlay.id = 'login-popup-overlay';
+
+  const popup = document.createElement('div');
+  popup.className = 'login-popup';
+  popup.setAttribute('role', 'dialog');
+  popup.setAttribute('aria-modal', 'true');
+
+  const title = document.createElement('h2');
+  title.className = 'login-popup-title';
+  title.textContent = 'ログイン';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'login-popup-close';
+  closeBtn.setAttribute('aria-label', '閉じる');
+  closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+  closeBtn.addEventListener('click', closeLoginPopup);
+
+  // ---- 一般ユーザーログイン（名前のみ） ----
+  const nameLabel = document.createElement('label');
+  nameLabel.className = 'login-popup-label';
+  nameLabel.textContent = 'ユーザー名';
+
+  const nameInput = document.createElement('input');
+  nameInput.type = 'text';
+  nameInput.className = 'user-bar-input login-popup-input';
+  nameInput.placeholder = 'ユーザー名';
+  nameInput.autocomplete = 'username';
+
+  const loginBtn = document.createElement('button');
+  loginBtn.type = 'button';
+  loginBtn.className = 'user-bar-btn primary login-popup-submit';
+  loginBtn.textContent = 'ログイン';
+  const doLogin = () => {
+    const name = nameInput.value.trim();
+    if (!name) {
+      nameInput.focus();
+      return;
+    }
+    setCurrentUserName(name);
+    location.reload();
+  };
+  loginBtn.addEventListener('click', doLogin);
+  nameInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      doLogin();
+    }
+  });
+
+  // ---- 管理者ログイン（折りたたみ） ----
+  const adminToggle = document.createElement('button');
+  adminToggle.type = 'button';
+  adminToggle.className = 'admin-login-toggle';
+  adminToggle.setAttribute('aria-expanded', 'false');
+  adminToggle.innerHTML = '<i class="fa-solid fa-chevron-right admin-login-chevron"></i> 管理者ログイン';
+
+  const adminForm = document.createElement('div');
+  adminForm.className = 'admin-login-form';
+  adminForm.hidden = true;
+
+  const emailInput = document.createElement('input');
+  emailInput.type = 'email';
+  emailInput.className = 'user-bar-input login-popup-input';
+  emailInput.placeholder = '管理者メールアドレス';
+  emailInput.autocomplete = 'username';
+
+  const passwordInput = document.createElement('input');
+  passwordInput.type = 'password';
+  passwordInput.className = 'user-bar-input login-popup-input';
+  passwordInput.placeholder = 'パスワード';
+  passwordInput.autocomplete = 'current-password';
+
+  const adminLoginBtn = document.createElement('button');
+  adminLoginBtn.type = 'button';
+  adminLoginBtn.className = 'user-bar-btn primary login-popup-submit';
+  adminLoginBtn.textContent = '管理者としてログイン';
+
+  const adminError = document.createElement('span');
+  adminError.className = 'user-bar-error';
+
+  const doAdminLogin = async () => {
+    if (!client) {
+      adminError.textContent = 'DBに接続できていません';
+      return;
+    }
+    adminError.textContent = '';
+    const { error } = await client.auth.signInWithPassword({
+      email: emailInput.value.trim(),
+      password: passwordInput.value
+    });
+    if (error) {
+      adminError.textContent = 'ログインに失敗しました';
+      return;
+    }
+    location.reload();
+  };
+  adminLoginBtn.addEventListener('click', doAdminLogin);
+  passwordInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      doAdminLogin();
+    }
+  });
+
+  adminToggle.addEventListener('click', () => {
+    const willOpen = adminForm.hidden;
+    adminForm.hidden = !willOpen;
+    adminToggle.setAttribute('aria-expanded', String(willOpen));
+    adminToggle.querySelector('.admin-login-chevron').style.transform = willOpen ? 'rotate(90deg)' : '';
+    if (willOpen) {
+      emailInput.focus();
+    }
+  });
+
+  adminForm.append(emailInput, passwordInput, adminLoginBtn, adminError);
+  popup.append(title, closeBtn, nameLabel, nameInput, loginBtn, adminToggle, adminForm);
+  overlay.append(popup);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      closeLoginPopup();
+    }
+  });
+  document.addEventListener('keydown', handleLoginPopupKeydown);
+  document.body.append(overlay);
+  nameInput.focus();
+}
+
+/** ログインポップアップを閉じます。 */
+function closeLoginPopup() {
+  const overlay = document.getElementById('login-popup-overlay');
+  if (overlay) {
+    overlay.remove();
+  }
+  document.removeEventListener('keydown', handleLoginPopupKeydown);
+}
+
+function handleLoginPopupKeydown(event) {
+  if (event.key === 'Escape') {
+    closeLoginPopup();
+  }
+}
+
+/**
+ * トップバーの #user-bar を描画します。
+ * 未ログインなら「ログイン」ボタン（ポップアップを開く）、
+ * ログイン中なら名前と「ログアウト」を表示します。
  *
  * @param {object} client - Supabaseクライアント（null可）
  */
@@ -96,92 +250,11 @@ async function renderUserBar(client) {
     return;
   }
 
-  // ---- 未ログイン：名前入力＋管理者ログイン切替 ----
-  const nameInput = document.createElement('input');
-  nameInput.type = 'text';
-  nameInput.className = 'user-bar-input';
-  nameInput.placeholder = 'ユーザー名';
-  nameInput.autocomplete = 'username';
-
-  const loginBtn = document.createElement('button');
-  loginBtn.type = 'button';
-  loginBtn.className = 'user-bar-btn primary';
-  loginBtn.textContent = 'ログイン';
-  const doLogin = () => {
-    const name = nameInput.value.trim();
-    if (!name) {
-      nameInput.focus();
-      return;
-    }
-    setCurrentUserName(name);
-    location.reload();
-  };
-  loginBtn.addEventListener('click', doLogin);
-  nameInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      doLogin();
-    }
-  });
-
-  const adminToggle = document.createElement('button');
-  adminToggle.type = 'button';
-  adminToggle.className = 'user-bar-btn';
-  adminToggle.textContent = '管理者ログイン';
-
-  const adminForm = document.createElement('div');
-  adminForm.className = 'admin-login-form';
-  adminForm.hidden = true;
-
-  const emailInput = document.createElement('input');
-  emailInput.type = 'email';
-  emailInput.className = 'user-bar-input';
-  emailInput.placeholder = '管理者メールアドレス';
-  emailInput.autocomplete = 'username';
-
-  const passwordInput = document.createElement('input');
-  passwordInput.type = 'password';
-  passwordInput.className = 'user-bar-input';
-  passwordInput.placeholder = 'パスワード';
-  passwordInput.autocomplete = 'current-password';
-
-  const adminLoginBtn = document.createElement('button');
-  adminLoginBtn.type = 'button';
-  adminLoginBtn.className = 'user-bar-btn primary';
-  adminLoginBtn.textContent = '管理者としてログイン';
-
-  const adminError = document.createElement('span');
-  adminError.className = 'user-bar-error';
-
-  const doAdminLogin = async () => {
-    if (!client) {
-      adminError.textContent = 'DBに接続できていません';
-      return;
-    }
-    adminError.textContent = '';
-    const { error } = await client.auth.signInWithPassword({
-      email: emailInput.value.trim(),
-      password: passwordInput.value
-    });
-    if (error) {
-      adminError.textContent = 'ログインに失敗しました';
-      return;
-    }
-    location.reload();
-  };
-  adminLoginBtn.addEventListener('click', doAdminLogin);
-  passwordInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      doAdminLogin();
-    }
-  });
-
-  adminToggle.addEventListener('click', () => {
-    adminForm.hidden = !adminForm.hidden;
-    if (!adminForm.hidden) {
-      emailInput.focus();
-    }
-  });
-
-  adminForm.append(emailInput, passwordInput, adminLoginBtn, adminError);
-  bar.append(nameInput, loginBtn, adminToggle, adminForm);
+  // ---- 未ログイン：「ログイン」ボタンでポップアップを開く ----
+  const openBtn = document.createElement('button');
+  openBtn.type = 'button';
+  openBtn.className = 'login-btn';
+  openBtn.innerHTML = '<i class="fa-regular fa-user"></i> ログイン';
+  openBtn.addEventListener('click', () => openLoginPopup(client));
+  bar.append(openBtn);
 }
