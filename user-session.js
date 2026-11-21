@@ -29,6 +29,117 @@ function clearCurrentUserName() {
   localStorage.removeItem(QUALISTUDY_USER_KEY);
 }
 
+// ======================================
+// IPアドレスによるログイン状態の保持
+// ======================================
+// 同じIPアドレスからは、前回ログインしたユーザー名を
+// user_sessions テーブルで引き継ぎます（名前のみログインの
+// 利便機能です。IPが変わる環境では効きません）。
+
+let sessionClientPromise = null;
+
+/** IPセッション用に Supabase クライアントを用意します。 */
+async function getSessionClient(provided) {
+  if (provided) {
+    return provided;
+  }
+  if (!sessionClientPromise) {
+    sessionClientPromise = (async () => {
+      try {
+        if (!window.supabase) {
+          return null;
+        }
+        const response = await fetch('/supabase-config.json');
+        const raw = await response.json();
+        const config = raw.supabase || raw;
+        return window.supabase.createClient(config.url, config.key);
+      } catch (error) {
+        return null;
+      }
+    })();
+  }
+  return sessionClientPromise;
+}
+
+/** 接続元IPアドレスを取得します（Cloudflare の trace を利用）。 */
+async function fetchClientIp() {
+  try {
+    const response = await fetch('/cdn-cgi/trace');
+    const text = await response.text();
+    const match = text.match(/^ip=(.+)$/m);
+    return match ? match[1].trim() : '';
+  } catch (error) {
+    return '';
+  }
+}
+
+/** 現在のIPとユーザー名の対応を保存します。 */
+async function saveIpSession(client, userName) {
+  try {
+    const ip = await fetchClientIp();
+    const c = await getSessionClient(client);
+    if (!ip || !c || !userName) {
+      return;
+    }
+    await c
+      .from('user_sessions')
+      .upsert(
+        { ip, user_name: userName, updated_at: new Date().toISOString() },
+        { onConflict: 'ip' }
+      );
+  } catch (error) {
+    // 保持できなくてもログイン自体は継続します。
+  }
+}
+
+/** 現在のIPの対応付けを削除します（ログアウト時）。 */
+async function deleteIpSession(client) {
+  try {
+    const ip = await fetchClientIp();
+    const c = await getSessionClient(client);
+    if (!ip || !c) {
+      return;
+    }
+    await c.from('user_sessions').delete().eq('ip', ip);
+  } catch (error) {
+    // 削除できなくてもログアウト自体は継続します。
+  }
+}
+
+/**
+ * ログイン状態を引き継ぎます。
+ * ログイン済みなら現在のIPへ対応を保存し、未ログインなら
+ * 同じIPの前回ユーザーを復元します。
+ */
+async function restoreIpSession(client) {
+  try {
+    const current = getCurrentUserName();
+    if (current) {
+      saveIpSession(client, current);
+      return;
+    }
+    const ip = await fetchClientIp();
+    const c = await getSessionClient(client);
+    if (!ip || !c) {
+      return;
+    }
+    const { data } = await c
+      .from('user_sessions')
+      .select('user_name')
+      .eq('ip', ip)
+      .maybeSingle();
+    if (data && data.user_name) {
+      setCurrentUserName(data.user_name);
+      if (!sessionStorage.getItem('qualistudyIpRestored')) {
+        sessionStorage.setItem('qualistudyIpRestored', '1');
+        location.reload();
+      }
+    }
+  } catch (error) {
+    // 引き継げなくても通常表示は継続します。
+  }
+}
+
 /** 管理者セッション（Supabase Auth）があれば返します。 */
 async function getAdminSession(client) {
   if (!client) {
@@ -87,13 +198,14 @@ function openLoginPopup(client) {
   loginBtn.type = 'button';
   loginBtn.className = 'user-bar-btn primary login-popup-submit';
   loginBtn.textContent = 'ログイン';
-  const doLogin = () => {
+  const doLogin = async () => {
     const name = nameInput.value.trim();
     if (!name) {
       nameInput.focus();
       return;
     }
     setCurrentUserName(name);
+    await saveIpSession(client, name);
     location.reload();
   };
   loginBtn.addEventListener('click', doLogin);
@@ -208,6 +320,9 @@ async function renderUserBar(client) {
     return;
   }
 
+  // IPアドレスによるログイン状態の引き継ぎ（復元時はリロードされます）
+  restoreIpSession(client);
+
   const adminSession = await getAdminSession(client);
   const userName = getCurrentUserName();
   bar.innerHTML = '';
@@ -222,6 +337,7 @@ async function renderUserBar(client) {
     logoutBtn.className = 'user-bar-btn';
     logoutBtn.textContent = 'ログアウト';
     logoutBtn.addEventListener('click', async () => {
+      await deleteIpSession(client);
       clearCurrentUserName();
       if (client) {
         await client.auth.signOut();
@@ -242,7 +358,8 @@ async function renderUserBar(client) {
     logoutBtn.type = 'button';
     logoutBtn.className = 'user-bar-btn';
     logoutBtn.textContent = 'ログアウト';
-    logoutBtn.addEventListener('click', () => {
+    logoutBtn.addEventListener('click', async () => {
+      await deleteIpSession(client);
       clearCurrentUserName();
       location.reload();
     });

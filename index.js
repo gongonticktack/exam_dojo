@@ -115,6 +115,40 @@ async function fetchQuestionCount(examId) {
 }
 
 /**
+ * ログインユーザーが回答済みの問題数（重複なし）を取得します。
+ * 未ログインの場合は 0 を返します。
+ *
+ * @param {number} examId - 資格ID。
+ * @returns {number|null} 処理結果。
+ */
+async function fetchAnsweredCount(examId) {
+  if (!supabaseClient) {
+    return null;
+  }
+  const userName =
+    typeof getCurrentUserName === 'function' ? getCurrentUserName() : '';
+  if (!userName) {
+    return 0;
+  }
+  try {
+    const { data, error } = await supabaseClient
+      .from('exam_histories')
+      .select('question_id')
+      .eq('exam_id', examId)
+      .eq('user_name', userName)
+      .not('question_id', 'is', null);
+    if (error) {
+      console.error('回答済み数取得エラー:', error);
+      return null;
+    }
+    return new Set((data || []).map((row) => row.question_id)).size;
+  } catch (error) {
+    console.error('回答済み数取得中にエラー発生:', error);
+    return null;
+  }
+}
+
+/**
  * トップ画面に表示する直近の学習履歴を取得します。
  *
  * @param {number} examId - この関数に渡す値。
@@ -727,6 +761,9 @@ const examDescription =
 const statQuestions =
   document.getElementById("stat-questions");
 
+const statAnswered =
+  document.getElementById("stat-answered");
+
 const statAccuracy =
   document.getElementById("stat-accuracy");
 
@@ -1025,6 +1062,18 @@ async function updateExam(index) {
   // ステータス
   statQuestions.textContent =
     `${displayQuestionCount}問`;
+
+  // 回答済み（回答済み問題数 / 全問題数）
+  const answeredCount = await fetchAnsweredCount(exam.id);
+  if (!isCurrentUpdate()) {
+    return;
+  }
+  if (statAnswered) {
+    statAnswered.textContent =
+      answeredCount !== null
+        ? `${answeredCount} / ${displayQuestionCount}問`
+        : `- / ${displayQuestionCount}問`;
+  }
 
   const examSummary = await fetchExamSummary(exam.id);
   if (!isCurrentUpdate()) {
