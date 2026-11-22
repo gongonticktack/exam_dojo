@@ -1049,9 +1049,11 @@ async function updateExam(index) {
   }
   const displayQuestionCount = dbQuestionCount !== null ? dbQuestionCount : exam.stats.questions;
 
-  // ステータス
-  statQuestions.textContent =
-    `${displayQuestionCount}問`;
+  // ステータス（問題数カードは廃止。総数は「回答済み」の分母で表示する）
+  if (statQuestions) {
+    statQuestions.textContent =
+      `${displayQuestionCount}問`;
+  }
 
   // 回答済み（回答済み問題数 / 全問題数）
   const answeredCount = await fetchAnsweredCount(exam.id);
