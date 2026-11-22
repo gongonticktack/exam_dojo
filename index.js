@@ -594,6 +594,7 @@ const exams = [
     title: "HTML5 Professional Level1",
     description: "HTML5/CSS/JavaScriptの基礎を学ぶWeb資格。マークアップ、スタイリング、アクセシビリティなどを幅広く出題します。",
     icon: "fa-code",
+    image: "https://cdn.simpleicons.org/html5",
     stats: { questions: 250, accuracy: "83%", studyTime: "14時間", studyDays: "10日" },
     history: ["HTML5の新要素", "CSS Flexbox", "JavaScript DOM操作"],
     weakness: [{ name: "Canvas API", rate: "35%" }, { name: "Web Storage", rate: "45%" }, { name: "Geolocation", rate: "55%" }]
@@ -604,6 +605,7 @@ const exams = [
     title: "UMLモデリング技能認定 L2",
     description: "クラス図、シーケンス図、オブジェクト指向設計などを学ぶ資格。",
     icon: "fa-diagram-project",
+    image: "https://upload.wikimedia.org/wikipedia/commons/d/d5/UML_logo.svg",
     stats: { questions: 180, accuracy: "61%", studyTime: "9時間", studyDays: "5日" },
     history: ["クラス図の記法", "シーケンス図の作成", "ユースケース図"],
     weakness: [{ name: "シーケンス図", rate: "40%" }, { name: "ステートマシン", rate: "50%" }, { name: "コンポーネント図", rate: "65%" }]
@@ -614,6 +616,7 @@ const exams = [
     title: "AWS Certified Solutions Architect - Associate",
     description: "AWSの設計と運用を問う中級資格。インフラ構築、ネットワーク、セキュリティ、可用性設計などが出題されます。",
     icon: "fa-cloud",
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg",
     stats: { questions: 300, accuracy: "75%", studyTime: "20時間", studyDays: "14日" },
     history: ["VPC設計の基本", "IAMベストプラクティス", "高可用性アーキテクチャ"],
     weakness: [{ name: "VPC", rate: "50%" }, { name: "設計パターン", rate: "60%" }, { name: "コスト最適化", rate: "55%" }]
@@ -634,6 +637,7 @@ const exams = [
     title: "MCPC IoTシステム技術検定 中級",
     description: "MCPCの検定。IoTやモバイルシステムの知識・技術を問うCBT試験。",
     icon: "fa-tower-broadcast",
+    image: "https://www.mcpc-jp.org/img/h_logo.png",
     stats: { questions: 20, accuracy: "-", studyTime: "-", studyDays: "-" },
     history: [],
     weakness: []
@@ -644,11 +648,30 @@ const exams = [
     title: "Oracle Cloud Infrastructure Architect Associate",
     description: "OCIの設計・運用を問う認定（1Z0-1072）。ネットワーク、IAM、コンピュート、セキュリティのケーススタディ中心。",
     icon: "fa-cloud",
+    image: "https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/oracle.svg",
     stats: { questions: 70, accuracy: "-", studyTime: "-", studyDays: "-" },
     history: [],
     weakness: []
   }
 ];
+
+// 資格名から公式ロゴ画像を引くための対応表（カスタム資格にも適用）
+const EXAM_IMAGE_MATCHERS = [
+  { pattern: /oracle|oci|オラクル/i, image: "https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/oracle.svg" },
+  { pattern: /mcpc/i, image: "https://www.mcpc-jp.org/img/h_logo.png" },
+  { pattern: /aws|amazon/i, image: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg" },
+  { pattern: /google|gcp/i, image: "https://cdn.simpleicons.org/googlecloud" },
+  { pattern: /html5/i, image: "https://cdn.simpleicons.org/html5" },
+  { pattern: /ipa|エンベデッド|情報処理|embedded/i, image: "https://www.ipa.go.jp/assets/images/logo-ipa-jp-sp-ipa-blue-wr26.svg" },
+  { pattern: /uml/i, image: "https://upload.wikimedia.org/wikipedia/commons/d/d5/UML_logo.svg" }
+];
+
+function resolveExamImage(exam) {
+  if (exam?.image) return exam.image;
+  const name = `${exam?.shortName || ""} ${exam?.title || ""}`;
+  const hit = EXAM_IMAGE_MATCHERS.find(m => m.pattern.test(name));
+  return hit ? hit.image : null;
+}
 
 const CUSTOM_EXAMS_STORAGE_KEY = "qualistudyCustomExams";
 
@@ -766,6 +789,9 @@ const statStudyDays =
 const heroIcon =
   document.querySelector(".hero-icon");
 
+const heroImg =
+  document.getElementById("hero-img");
+
 const historyList =
   document.querySelector(".history-card ul");
 
@@ -827,7 +853,20 @@ function createExamCard(exam) {
 
   body.appendChild(title);
   body.appendChild(description);
-  button.appendChild(icon);
+
+  const imageUrl = resolveExamImage(exam);
+  if (imageUrl) {
+    const img = document.createElement("img");
+    img.className = "exam-card-img";
+    img.src = imageUrl;
+    img.alt = "";
+    img.loading = "lazy";
+    img.referrerPolicy = "no-referrer";
+    img.onerror = () => img.replaceWith(icon);
+    button.appendChild(img);
+  } else {
+    button.appendChild(icon);
+  }
   button.appendChild(body);
 
   return button;
@@ -1039,8 +1078,23 @@ async function updateExam(index) {
   examDescription.textContent =
     exam.description;
 
-  // アイコン
+  // アイコン（公式ロゴ画像があれば画像、無ければ Font Awesome アイコン）
   heroIcon.className = `fa-solid ${exam.icon} hero-icon`;
+  const heroImageUrl = resolveExamImage(exam);
+  if (heroImg) {
+    if (heroImageUrl) {
+      heroImg.onerror = () => {
+        heroImg.hidden = true;
+        heroIcon.style.display = "";
+      };
+      heroImg.src = heroImageUrl;
+      heroImg.hidden = false;
+      heroIcon.style.display = "none";
+    } else {
+      heroImg.hidden = true;
+      heroIcon.style.display = "";
+    }
+  }
 
   // 問題数をDBから取得して更新
   const dbQuestionCount = await fetchQuestionCount(exam.id);

@@ -103,6 +103,17 @@ body {
   text-align: center;
 }
 
+.exam-card-img {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 10px;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
 .exam-card > div {
   min-width: 0;
   text-align: left;
@@ -306,6 +317,18 @@ body {
 .hero-icon {
   font-size: 180px;
   color: color-mix(in srgb, var(--accent) 65%, transparent);
+}
+
+.hero-img {
+  width: 180px;
+  height: 180px;
+  max-width: 42vw;
+  max-height: 42vw;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 28px;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .stats {
