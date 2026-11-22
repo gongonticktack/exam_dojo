@@ -181,3 +181,67 @@ body {
 .rewards-body th.sortable:hover {
   color: var(--text);
 }
+
+/* ======================================
+   トップページ内ビュー（#rewards-view）用レイアウト
+   ======================================
+   単独ページでは .rewards-shell（最大幅・外側余白）と
+   .rewards-panel（カード余白）がレイアウトを担いますが、
+   トップページ内の #rewards-view にはその入れ物がなく、
+   横幅いっぱいに広がって上下の余白も不足していました。
+   ここで単独ページと揃えた余白・最大幅・はみ出し防止を補います。
+   （#rewards-view は単独ページには存在しないため影響しません） */
+
+#rewards-view {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1040px;
+  margin: 24px auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 28px;
+}
+
+#rewards-view[hidden] {
+  display: none;
+}
+
+#rewards-view .rewards-view-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+#rewards-view .rewards-body {
+  min-width: 0;
+}
+
+#rewards-view .rewards-tabs {
+  margin-bottom: 16px;
+}
+
+#rewards-view .rewards-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* 狭い画面では表を潰さず、ラッパー内で横スクロールさせます */
+#rewards-view .rewards-body table {
+  min-width: 520px;
+}
+
+@media (max-width: 640px) {
+  #rewards-view {
+    padding: 18px;
+    border-radius: 20px;
+    margin: 16px auto;
+  }
+
+  #rewards-view .rewards-body table {
+    min-width: 460px;
+  }
+}
