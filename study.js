@@ -608,11 +608,25 @@ async function filterQuestionsForStudyMode(questionsData) {
     throw new Error("回答履歴に question_id 列がないため、復習モードを利用できません。");
   }
 
+  let studyUserName = localStorage.getItem("qualistudyUserName") || "";
+  if (!studyUserName) {
+    // ユーザー名が無い場合は管理者セッションから復旧する（管理者＝gtakkun）。
+    try {
+      const { data } = await supabaseClient.auth.getSession();
+      if (data && data.session) {
+        studyUserName = "gtakkun";
+        localStorage.setItem("qualistudyUserName", studyUserName);
+      }
+    } catch (sessionError) {
+      console.error("セッション確認エラー:", sessionError);
+    }
+  }
+
   const { data: historyData, error } = await supabaseClient
     .from("exam_histories")
     .select("*")
     .eq("exam_id", currentExamId)
-    .eq("user_name", localStorage.getItem("qualistudyUserName") || "");
+    .eq("user_name", studyUserName);
 
   if (error) {
     throw error;
@@ -1073,7 +1087,20 @@ async function saveExamHistory(isCorrect, questionIndex, selectedChoices) {
   }
 
   // 未ログイン時は履歴を保存しません（アクセスごとに初期化されます）。
-  const currentUserName = localStorage.getItem('qualistudyUserName') || '';
+  let currentUserName = localStorage.getItem('qualistudyUserName') || '';
+  if (!currentUserName) {
+    // 管理者セッションがあるのにユーザー名が保存されていない環境では
+    // 履歴が無言で欠落してしまうため、セッションから復旧する（管理者＝gtakkun）。
+    try {
+      const { data } = await supabaseClient.auth.getSession();
+      if (data && data.session) {
+        currentUserName = 'gtakkun';
+        localStorage.setItem('qualistudyUserName', currentUserName);
+      }
+    } catch (sessionError) {
+      console.error('セッション確認エラー:', sessionError);
+    }
+  }
   if (!currentUserName) {
     return;
   }
