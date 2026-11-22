@@ -11,14 +11,14 @@
 // - 未受験の収支比較（収支マイナスと受験料不明の資格は表示しない）
 // 各表はヘッダクリックでソートできる。
 
-let supabaseClient = null;
+let rewardsClient = null;
 
 function initSupabase() {
   const config = window.SUPABASE_CONFIG;
   if (!config || !config.url || !config.key) {
     return false;
   }
-  supabaseClient = window.supabase.createClient(config.url, config.key);
+  rewardsClient = window.supabase.createClient(config.url, config.key);
   return true;
 }
 
@@ -178,14 +178,14 @@ async function loadRewards(providedClient) {
   }
 
   if (providedClient) {
-    supabaseClient = providedClient;
+    rewardsClient = providedClient;
   } else if (!initSupabase()) {
     summaryEl.textContent = '';
     bodyEl.innerHTML = '<p>Supabase設定が不足しています。</p>';
     return;
   }
 
-  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const { data: sessionData } = await rewardsClient.auth.getSession();
   if (!sessionData.session) {
     summaryEl.textContent = '';
     bodyEl.innerHTML =
@@ -195,11 +195,11 @@ async function loadRewards(providedClient) {
 
   const [{ data: held, error: heldError }, { data: quals, error: qualsError }] =
     await Promise.all([
-      supabaseClient
+      rewardsClient
         .from('held_certifications')
         .select('*')
         .order('sort_order', { ascending: true }),
-      supabaseClient
+      rewardsClient
         .from('qualifications')
         .select('*')
         .order('sort_order', { ascending: true }),
