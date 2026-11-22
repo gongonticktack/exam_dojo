@@ -726,20 +726,15 @@ function shuffleQuestions() {
 // 指定されたインデックスの問題と選択肢を表示
 
 /**
- * 表示用に選択肢の順番をランダムに並べ替えます。
+ * 表示用に選択肢を登録順（choice_index 昇順）に並べます。
+ * 解説文中の①②③④が表示順と一致するよう、ランダム化は行いません
+ * （2026-11-22 Gomi指示でシャッフル廃止）。
  *
  * @param {Array} choices - この関数に渡す値。
  * @returns {Array} 処理結果。
  */
 function getShuffledChoices(choices) {
-  const shuffledChoices = [...choices];
-
-  for (let i = shuffledChoices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledChoices[i], shuffledChoices[j]] = [shuffledChoices[j], shuffledChoices[i]];
-  }
-
-  return shuffledChoices;
+  return [...choices].sort((a, b) => (a.choice_index || 0) - (b.choice_index || 0));
 }
 
 /**
