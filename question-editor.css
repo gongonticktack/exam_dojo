@@ -26,7 +26,7 @@ body {
 
 body {
   font-family: "Noto Sans JP", sans-serif;
-  background: radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 14%, transparent), transparent 24%), radial-gradient(circle at bottom right, color-mix(in srgb, var(--accent) 12%, transparent), transparent 20%), linear-gradient(135deg, #04050c 0%, #0b1023 45%, #070912 100%);
+  background: radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 14%, transparent), transparent 24%), radial-gradient(circle at bottom right, color-mix(in srgb, var(--accent) 12%, transparent), transparent 20%), linear-gradient(135deg, var(--bg-grad-1, #04050c) 0%, var(--bg-grad-2, #0b1023) 45%, var(--bg-grad-3, #070912) 100%);
   color: var(--text);
   min-height: 100vh;
   display: flex;

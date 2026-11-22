@@ -26,7 +26,7 @@ body {
 
 body {
   font-family: "Noto Sans JP", sans-serif;
-  background: radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 18%, transparent), transparent 30%), radial-gradient(circle at bottom right, color-mix(in srgb, var(--accent) 15%, transparent), transparent 25%), radial-gradient(circle at center, rgba(255, 255, 255, 0.02), transparent 50%), linear-gradient(135deg, #04050c 0%, #0b1121 45%, #090912 100%);
+  background: radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 18%, transparent), transparent 30%), radial-gradient(circle at bottom right, color-mix(in srgb, var(--accent) 15%, transparent), transparent 25%), radial-gradient(circle at center, rgba(255, 255, 255, 0.02), transparent 50%), linear-gradient(135deg, var(--bg-grad-1, #04050c) 0%, var(--bg-grad-2, #0b1121) 45%, var(--bg-grad-3, #090912) 100%);
   color: var(--text);
   min-height: 100vh;
   display: flex;
@@ -388,7 +388,7 @@ body {
 }
 
 .debug-log-card {
-  background: rgba(18, 24, 60, 0.72);
+  background: var(--surface-soft);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 20px;
   display: none;
@@ -409,6 +409,9 @@ body {
   color: var(--text-muted);
   font-size: 0.8rem;
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .debug-log-list {

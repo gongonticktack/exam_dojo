@@ -17,7 +17,7 @@
 }
 
 body {
-  background: radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 18%, transparent), transparent 30%), linear-gradient(135deg, #04050c 0%, #0b1121 45%, #090912 100%);
+  background: radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 18%, transparent), transparent 30%), linear-gradient(135deg, var(--bg-grad-1, #04050c) 0%, var(--bg-grad-2, #0b1121) 45%, var(--bg-grad-3, #090912) 100%);
   color: var(--text);
   font-family: "Noto Sans JP", sans-serif;
   min-height: 100vh;
@@ -124,7 +124,7 @@ body {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
   border-radius: 999px;
-  color: #c8c2ff;
+  color: var(--accent-2);
   font-size: 0.82rem;
   font-weight: 700;
   padding: 7px 10px;
@@ -183,7 +183,7 @@ body {
 .add-choice-btn {
   background: color-mix(in srgb, var(--accent) 15%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
-  color: #d7d2ff;
+  color: var(--accent-2);
   padding: 9px 12px;
 }
 
