@@ -627,6 +627,7 @@ const exams = [
     title: "JCSQE 初級",
     description: "ソフトウェア品質管理の基礎資格。テスト技法、品質保証、ソフトウェア開発プロセスについて学びます。",
     icon: "fa-book",
+    image: "https://www.juse.jp/jcsqe/images/panel_logo.png",
     stats: { questions: 210, accuracy: "80%", studyTime: "12時間", studyDays: "8日" },
     history: ["テスト設計基礎", "品質管理プロセス", "レビュー手法"],
     weakness: [{ name: "テストケース設計", rate: "40%" }, { name: "品質指標", rate: "55%" }, { name: "プロセス改善", rate: "50%" }]
@@ -638,6 +639,7 @@ const exams = [
     description: "MCPCの検定。IoTやモバイルシステムの知識・技術を問うCBT試験。",
     icon: "fa-tower-broadcast",
     image: "https://www.mcpc-jp.org/img/h_logo.png",
+    imageBg: "#0F3557",
     stats: { questions: 20, accuracy: "-", studyTime: "-", studyDays: "-" },
     history: [],
     weakness: []
@@ -658,7 +660,8 @@ const exams = [
 // 資格名から公式ロゴ画像を引くための対応表（カスタム資格にも適用）
 const EXAM_IMAGE_MATCHERS = [
   { pattern: /oracle|oci|オラクル/i, image: "https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/oracle.svg" },
-  { pattern: /mcpc/i, image: "https://www.mcpc-jp.org/img/h_logo.png" },
+  { pattern: /mcpc/i, image: "https://www.mcpc-jp.org/img/h_logo.png", bg: "#0F3557" },
+  { pattern: /jcsqe/i, image: "https://www.juse.jp/jcsqe/images/panel_logo.png" },
   { pattern: /aws|amazon/i, image: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg" },
   { pattern: /google|gcp/i, image: "https://cdn.simpleicons.org/googlecloud" },
   { pattern: /html5/i, image: "https://cdn.simpleicons.org/html5" },
@@ -671,6 +674,14 @@ function resolveExamImage(exam) {
   const name = `${exam?.shortName || ""} ${exam?.title || ""}`;
   const hit = EXAM_IMAGE_MATCHERS.find(m => m.pattern.test(name));
   return hit ? hit.image : null;
+}
+
+// ロゴ自体が白文字など、台の色を指定したい場合の背景色（無ければ白台）
+function resolveExamImageBg(exam) {
+  if (exam?.imageBg) return exam.imageBg;
+  const name = `${exam?.shortName || ""} ${exam?.title || ""}`;
+  const hit = EXAM_IMAGE_MATCHERS.find(m => m.pattern.test(name));
+  return hit?.bg || null;
 }
 
 const CUSTOM_EXAMS_STORAGE_KEY = "qualistudyCustomExams";
@@ -859,6 +870,8 @@ function createExamCard(exam) {
     const img = document.createElement("img");
     img.className = "exam-card-img";
     img.src = imageUrl;
+    const imgBg = resolveExamImageBg(exam);
+    if (imgBg) img.style.background = imgBg;
     img.alt = "";
     img.loading = "lazy";
     img.referrerPolicy = "no-referrer";
@@ -1087,6 +1100,7 @@ async function updateExam(index) {
         heroImg.hidden = true;
         heroIcon.style.display = "";
       };
+      heroImg.style.background = resolveExamImageBg(exam) || "";
       heroImg.src = heroImageUrl;
       heroImg.hidden = false;
       heroIcon.style.display = "none";
