@@ -180,7 +180,7 @@ function renderRichText(container, text) {
   container.innerHTML = "";
 
   const value = String(text || "");
-  const imagePattern = /!\[([^\]]*)]\((data:image\/[^)]+|https?:\/\/[^)]+)\)/g;
+  const markupPattern = /!\[([^\]]*)]\((data:image\/[^)]+|https?:\/\/[^)]+)\)|\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
   let lastIndex = 0;
   let match;
 
@@ -201,17 +201,27 @@ function renderRichText(container, text) {
     });
   };
 
-  while ((match = imagePattern.exec(value)) !== null) {
+  while ((match = markupPattern.exec(value)) !== null) {
     appendText(value.slice(lastIndex, match.index));
 
-    const img = document.createElement('img');
-    img.className = 'rich-text-image';
-    img.alt = match[1] || 'image';
-    img.src = match[2];
-    img.loading = 'lazy';
-    container.appendChild(img);
+    if (match[2] !== undefined) {
+      const img = document.createElement('img');
+      img.className = 'rich-text-image';
+      img.alt = match[1] || 'image';
+      img.src = match[2];
+      img.loading = 'lazy';
+      container.appendChild(img);
+    } else {
+      const link = document.createElement('a');
+      link.className = 'rich-text-link';
+      link.href = match[4];
+      link.textContent = match[3];
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      container.appendChild(link);
+    }
 
-    lastIndex = imagePattern.lastIndex;
+    lastIndex = markupPattern.lastIndex;
   }
 
   appendText(value.slice(lastIndex));
