@@ -1118,6 +1118,12 @@ body {
   display: none;
 }
 
+/* 報奨金ビュー表示時はメインの各セクションを完全に隠す
+   （display: grid 等の指定が hidden 属性より優先される問題への対策） */
+.main-content > [hidden] {
+  display: none !important;
+}
+
 .rewards-view-heading {
   align-items: center;
   display: flex;
