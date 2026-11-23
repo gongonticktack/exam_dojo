@@ -3,7 +3,7 @@
   // このプロジェクトでは静的HTML/CSS/JSを配信しつつ、
   // functions/ 配下のPages Functionsも一緒にデプロイします。
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "mockexam",
+  "name": "exam-dojo",
   "compatibility_date": "2026-05-11",
   "observability": {
     "enabled": true
