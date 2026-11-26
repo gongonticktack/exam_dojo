@@ -410,7 +410,9 @@ async function initPage() {
     { id: 6, shortName: "JCSQE 初級" },
     { id: 101, shortName: "GenAI Leader" },
     { id: 102, shortName: "MCPC IoT 中級" },
-    { id: 103, shortName: "OCI Architect" }
+    { id: 103, shortName: "OCI Architect" },
+    { id: 104, shortName: "GCP ACE" },
+    { id: 105, shortName: "エンベデッド" }
   ];
 
   // 資格名から資格IDを取得

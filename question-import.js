@@ -272,6 +272,50 @@ const exams = [
 
     }
 
+  },
+
+  {
+
+    id: 104,
+
+    shortName: "GCP ACE",
+
+    title: "Google Cloud Associate Cloud Engineer",
+
+    description:
+      "Google Cloudの実装・運用を問う認定。実務シナリオ中心の出題。",
+
+    stats: {
+
+      questions: 50,
+      accuracy: "-",
+      studyTime: "-",
+      studyDays: "-"
+
+    }
+
+  },
+
+  {
+
+    id: 105,
+
+    shortName: "エンベデッド",
+
+    title: "エンベデッドシステムスペシャリスト",
+
+    description:
+      "IPAの高度情報処理技術者試験。組込みシステムの設計・開発を問う。",
+
+    stats: {
+
+      questions: 50,
+      accuracy: "-",
+      studyTime: "-",
+      studyDays: "-"
+
+    }
+
   }
 
 ];

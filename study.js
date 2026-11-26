@@ -332,7 +332,9 @@ async function initPage() {
     { id: 6, shortName: "JCSQE 初級", name: "JCSQE 初級" },
     { id: 101, shortName: "GenAI Leader", name: "Google Cloud Generative AI Leader" },
     { id: 102, shortName: "MCPC IoT 中級", name: "MCPC IoTシステム技術検定 中級" },
-    { id: 103, shortName: "OCI Architect", name: "Oracle Cloud Infrastructure Architect Associate" }
+    { id: 103, shortName: "OCI Architect", name: "Oracle Cloud Infrastructure Architect Associate" },
+    { id: 104, shortName: "GCP ACE", name: "Google Cloud Associate Cloud Engineer" },
+    { id: 105, shortName: "エンベデッド", name: "エンベデッドシステムスペシャリスト" }
   ];
 
   let selectedExamName = selectedExamFromQuery || storedExamName;

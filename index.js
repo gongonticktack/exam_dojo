@@ -654,6 +654,28 @@ const exams = [
     stats: { questions: 70, accuracy: "-", studyTime: "-", studyDays: "-" },
     history: [],
     weakness: []
+  },
+  {
+    id: 104,
+    shortName: "GCP ACE",
+    title: "Google Cloud Associate Cloud Engineer",
+    description: "Google Cloudの実装・運用を問う認定。コンピュート、ストレージ、ネットワーク、IAMの実務シナリオ中心。",
+    icon: "fa-cloud",
+    image: "https://cdn.simpleicons.org/googlecloud",
+    stats: { questions: 50, accuracy: "-", studyTime: "-", studyDays: "-" },
+    history: [],
+    weakness: []
+  },
+  {
+    id: 105,
+    shortName: "エンベデッド",
+    title: "エンベデッドシステムスペシャリスト",
+    description: "IPAの高度情報処理技術者試験。組込みシステムの設計・開発、リアルタイムOS、ハードウェアを問う。",
+    icon: "fa-microchip",
+    image: "https://www.ipa.go.jp/assets/images/logo-ipa-jp-sp-ipa-blue-wr26.svg",
+    stats: { questions: 50, accuracy: "-", studyTime: "-", studyDays: "-" },
+    history: [],
+    weakness: []
   }
 ];
 
