@@ -27,6 +27,7 @@ let currentCategoryFilter = "";
 let currentTargetQuestionId = null;
 let currentStudyMode = "";
 let currentUnansweredPeriodDays = "7";
+let currentPeriodDaysFromQuery = null;
 let answered = false;
 let loadingProgress = 0;
 let loadingStartedAt = 0;
@@ -366,6 +367,7 @@ async function initPage() {
   currentTargetQuestionId = questionIdFromQuery;
   currentStudyMode = ["unanswered", "incorrect", "recent-incorrect"].includes(studyModeFromQuery) ? studyModeFromQuery : "";
   currentUnansweredPeriodDays = unansweredPeriodDaysFromQuery;
+  currentPeriodDaysFromQuery = params.get("periodDays");
   currentStudySessionStartedAt = new Date().toISOString();
 
   // ヘッダーに資格名を表示
@@ -376,9 +378,9 @@ async function initPage() {
   if (currentStudyMode === "unanswered") {
     headerLabels.push("未回答問題");
   } else if (currentStudyMode === "recent-incorrect") {
-    headerLabels.push("直近で間違えた問題");
+    headerLabels.push("間違えた問題");
   } else if (currentStudyMode === "incorrect") {
-    headerLabels.push("過去に間違えた問題");
+    headerLabels.push("間違えた問題");
   }
   document.getElementById("exam-name-header").textContent = headerLabels.join(" / ");
 
@@ -583,11 +585,11 @@ function getEmptyStudyModeMessage() {
   }
 
   if (currentStudyMode === "incorrect") {
-    return "過去に間違えた問題はありません。トップへ戻ります。";
+    return "指定した期間内に間違えた問題はありません。トップへ戻ります。";
   }
 
   if (currentStudyMode === "recent-incorrect") {
-    return "直近で間違えた問題はありません。トップへ戻ります。";
+    return "指定した期間内に間違えた問題はありません。トップへ戻ります。";
   }
 
   return "該当する問題が見つかりませんでした。トップへ戻ります。";
@@ -635,17 +637,10 @@ async function filterQuestionsForStudyMode(questionsData) {
   const histories = historyData || [];
   let targetQuestionIds;
 
-  if (currentStudyMode === "incorrect") {
-    targetQuestionIds = new Set(
-      histories
-        .filter(item => item.question_id && getHistoryResult(item) === false)
-        .map(item => Number(item.question_id))
-    );
-
-    return questionsData.filter(question => targetQuestionIds.has(Number(question.id)));
-  }
-
-  if (currentStudyMode === "recent-incorrect") {
+  if (currentStudyMode === "incorrect" || currentStudyMode === "recent-incorrect") {
+    // 最新の回答が不正解の問題だけを対象にします（正解し直したらリストから外れます）。
+    // 期間指定がある場合は、その期間内に間違えたものだけに絞ります。
+    // 期間指定が無い場合は全期間が対象です。
     const latestHistoryByQuestionId = histories.reduce((map, item) => {
       if (!item.question_id) {
         return map;
@@ -661,9 +656,16 @@ async function filterQuestionsForStudyMode(questionsData) {
       return map;
     }, new Map());
 
+    const periodValue = currentPeriodDaysFromQuery === null ? "all" : currentPeriodDaysFromQuery;
+    const periodNumber = Number(periodValue);
+    const incorrectCutoffTime = periodValue === "all"
+      ? null
+      : Date.now() - (Number.isFinite(periodNumber) && periodNumber > 0 ? periodNumber : 7) * 24 * 60 * 60 * 1000;
+
     targetQuestionIds = new Set(
       [...latestHistoryByQuestionId.entries()]
         .filter(([, item]) => getHistoryResult(item) === false)
+        .filter(([, item]) => incorrectCutoffTime === null || getHistoryAnsweredTime(item) >= incorrectCutoffTime)
         .map(([questionId]) => questionId)
     );
 

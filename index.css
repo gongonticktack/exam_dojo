@@ -314,6 +314,35 @@ body {
   font-size: 1.1rem;
 }
 
+/* ヒーロー内の小ボタン（出題済みも解く／問題を追加／問題を編集） */
+.hero-buttons .btn-small {
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  box-shadow: none;
+}
+
+.hero-buttons .btn-small:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.all-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.all-btn:hover {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
 .hero-icon {
   font-size: 180px;
   color: color-mix(in srgb, var(--accent) 65%, transparent);
@@ -1088,6 +1117,7 @@ body {
   color: var(--text);
   padding: 12px 18px;
   margin-top: 24px;
+  margin-bottom: 24px;
   text-decoration: none;
   font-weight: 600;
 }

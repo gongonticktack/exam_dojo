@@ -824,9 +824,6 @@ const topStartUnansweredButton =
 const topStartIncorrectButton =
   document.getElementById("top-start-incorrect-btn");
 
-const topStartRecentIncorrectButton =
-  document.getElementById("top-start-recent-incorrect-btn");
-
 const topCustomPeriodInput =
   document.getElementById("top-custom-period-days");
 
@@ -988,7 +985,7 @@ function startTopPractice(mode) {
   const exam = getActiveExam();
   let periodDays = null;
 
-  if (mode === "unanswered") {
+  if (mode === "unanswered" || mode === "incorrect") {
     periodDays = selectedTopUnansweredPeriod;
 
     if (selectedTopUnansweredPeriod === "custom") {
@@ -1345,10 +1342,6 @@ if (topStartIncorrectButton) {
   topStartIncorrectButton.addEventListener("click", () => startTopPractice("incorrect"));
 }
 
-if (topStartRecentIncorrectButton) {
-  topStartRecentIncorrectButton.addEventListener("click", () => startTopPractice("recent-incorrect"));
-}
-
 // ======================================
 // 問題追加ボタン
 // ======================================
@@ -1405,7 +1398,8 @@ const startButton =
 // クリックイベント
 startButton.addEventListener("click", () => {
   // 「学習開始」ボタン。
-  // 前回途中だった資格なら、最後に解いた位置から再開できるようにしています。
+  // 今まで未回答の問題だけを出題します（出題済みも解きたい場合は
+  // 「出題済みも解く」ボタンを使います）。
 
   // 現在activeの資格取得
   const activeCard =
@@ -1423,7 +1417,6 @@ startButton.addEventListener("click", () => {
     selectedExam = localStorage.getItem("selectedExam") || "HTML5 L1";
   }
 
-  // 📖 学習ページへ移動 - URLパラメータで試験情報を渡します
   // LocalStorage保存
   localStorage.setItem(
     "selectedExamId",
@@ -1434,16 +1427,64 @@ startButton.addEventListener("click", () => {
     selectedExam
   );
 
-  // 前回学習していた問題インデックスを取得（ない場合は0）
-  const lastExamId = Number(localStorage.getItem("lastStudyExamId")) || 0;
-  const lastQuestionIndex = Number(localStorage.getItem("lastQuestionIndex")) || 0;
-  const startIndex = lastExamId === selectedExamId ? lastQuestionIndex : 0;
-
-  // 学習ページへ移動
+  // 未回答モード（全期間＝今まで一度も解いていない問題だけ）で学習ページへ移動
   window.location.href =
-    buildStudyUrl({ id: selectedExamId, shortName: selectedExam }, { questionIndex: startIndex });
+    buildStudyUrl({ id: selectedExamId, shortName: selectedExam }, { mode: "unanswered", periodDays: "all" });
 
 });
+
+// ======================================
+// 出題済みも解くボタン
+// ======================================
+
+// ボタン取得
+const allButton =
+  document.querySelector(".all-btn");
+
+// クリックイベント
+if (allButton) {
+  allButton.addEventListener("click", () => {
+    // 「出題済みも解く」ボタン。
+    // 回答済みの問題も含めて全問題を出題します。
+    // 前回途中だった資格なら、最後に解いた位置から再開できます。
+
+    // 現在activeの資格取得
+    const activeCard =
+      document.querySelector(".exam-card.active");
+
+    // 資格ID / 資格名取得
+    let selectedExamId = activeCard ? Number(activeCard.dataset.examId) : NaN;
+    let selectedExam = activeCard ? activeCard.dataset.examShortName : null;
+
+    // fallback: localStorage に保存されているものを使う
+    if (!selectedExamId || Number.isNaN(selectedExamId)) {
+      selectedExamId = Number(localStorage.getItem("selectedExamId")) || 3;
+    }
+    if (!selectedExam) {
+      selectedExam = localStorage.getItem("selectedExam") || "HTML5 L1";
+    }
+
+    // LocalStorage保存
+    localStorage.setItem(
+      "selectedExamId",
+      selectedExamId
+    );
+    localStorage.setItem(
+      "selectedExam",
+      selectedExam
+    );
+
+    // 前回学習していた問題インデックスを取得（ない場合は0）
+    const lastExamId = Number(localStorage.getItem("lastStudyExamId")) || 0;
+    const lastQuestionIndex = Number(localStorage.getItem("lastQuestionIndex")) || 0;
+    const startIndex = lastExamId === selectedExamId ? lastQuestionIndex : 0;
+
+    // 学習ページへ移動
+    window.location.href =
+      buildStudyUrl({ id: selectedExamId, shortName: selectedExam }, { questionIndex: startIndex });
+
+  });
+}
 
 // ======================================
 // 問題編集ボタン
