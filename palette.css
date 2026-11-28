@@ -17,6 +17,22 @@ body {
     linear-gradient(135deg, var(--bg-grad-1, #04050c) 0%, var(--bg-grad-2, #0b1121) 45%, var(--bg-grad-3, #090912) 100%);
 }
 
+/* ページ最上部のパレットストライプ（41/26/18/15、色は palette.js が本来の4色で上書き）
+   各ページで body のレイアウトが異なるため、フローに影響しない fixed で全幅表示にする */
+.palette-stripe {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  display: flex;
+  z-index: 2000;
+}
+.palette-stripe .s1 { flex: 41; background: var(--surface); }
+.palette-stripe .s2 { flex: 26; background: var(--accent-2, var(--accent)); }
+.palette-stripe .s3 { flex: 18; background: var(--accent-soft); }
+.palette-stripe .s4 { flex: 15; background: var(--accent); }
+
 /* パレット切替（独自ドロップダウン） */
 .palette-slot {
   flex: none;

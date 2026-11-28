@@ -276,7 +276,10 @@
     textMuted: '--text-muted'
   };
 
+  let currentPalette = null;
+
   function applyPalette(palette) {
+    currentPalette = palette;
     const root = document.documentElement;
     for (const [key, cssVar] of Object.entries(PALETTE_VAR_KEYS)) {
       if (palette.vars[key]) {
@@ -286,6 +289,30 @@
     // index.css は --accent-light、他ページは --accent-soft を使うため両方へ適用
     if (palette.vars.accentSoft) {
       root.style.setProperty('--accent-light', palette.vars.accentSoft);
+    }
+    // 上部ストライプはパレット本来の4色をそのまま使う
+    const stripe = document.querySelectorAll('.palette-stripe > span');
+    stripe.forEach((span, i) => {
+      if (palette.colors[i]) span.style.background = palette.colors[i];
+    });
+  }
+
+  // ページ最上部のパレットストライプ（全ページ共通・palette.js が差し込む）
+  function mountStripe() {
+    if (!document.body || document.querySelector('.palette-stripe')) return;
+    const stripe = document.createElement('div');
+    stripe.className = 'palette-stripe';
+    stripe.setAttribute('aria-hidden', 'true');
+    for (let i = 1; i <= 4; i++) {
+      const seg = document.createElement('span');
+      seg.className = 's' + i;
+      stripe.appendChild(seg);
+    }
+    document.body.prepend(stripe);
+    if (currentPalette) {
+      [...stripe.children].forEach((span, i) => {
+        if (currentPalette.colors[i]) span.style.background = currentPalette.colors[i];
+      });
     }
   }
 
@@ -422,7 +449,9 @@
   applyPalette(PALETTES[initialIndex]);
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initPalette);
+    document.addEventListener('DOMContentLoaded', mountStripe);
   } else {
     initPalette();
+    mountStripe();
   }
 })();
